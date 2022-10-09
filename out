@@ -1,0 +1,85 @@
+#line 1 "./level1.h"
+// hello this is test.h
+#include <stdio.h>
+#line 1 "./level2.h"
+#include <stdio.h>
+#line 1 "./local.h"
+
+#line 3 "./level2.h"
+#line 1 "./sub/level3.h"
+
+#line 4 "./level2.h"
+=> this is a recursive trap
+#line 4 "./level1.h"
+#line 1 "/home/yves/DEV/cpp/myFunc/input_logger.hh"
+// input logging
+// inspired from https://en.cppreference.com/w/cpp/io/basic_streambuf/underflow
+#include <iostream>
+#include <sstream>
+
+class buffer_logger : public std::streambuf {
+    std::streambuf* src;
+    char ch; // single-byte buffer
+
+    std::string input;
+
+protected:
+    int underflow() {
+        traits_type::int_type i = src->sbumpc();
+        if (traits_type::not_eof(i)) {
+            ch = traits_type::to_char_type(i);
+            setg(&ch, &ch, &ch+1); // make one read position available
+    
+            // 
+            input += ch;
+            if( ch == '\n') {
+                std::cerr << "=>" << input;
+                input = "";
+            }
+        }
+        else {
+                std::cerr << "*>" << input << std::endl;
+                input = "";
+        }
+
+        return i;
+    }
+    
+public:
+    buffer_logger(std::streambuf* buf) : src(buf) {
+        setg(&ch, &ch+1, &ch+1); // buffer is initially full
+    }
+};
+
+class input_logger
+{
+    std::istream & in;
+    std::streambuf* const sbuf;
+    buffer_logger blog;
+
+public:
+    input_logger(std::istream& in): 
+        in( in),
+        sbuf(in.rdbuf()),
+        blog( sbuf)
+    {
+        in.rdbuf(&blog);
+    }
+
+    ~input_logger() { in.rdbuf(sbuf); }
+};
+
+
+
+// Return content of stream as a string
+// http://wordaligned.org/articles/cpp-streambufs
+std::string load_stream(std::istream& src)
+{
+    std::ostringstream buf;
+    buf << src.rdbuf();
+    return buf.str();
+}
+
+#line 5 "./level1.h"
+
+#line 2 "local.h"

@@ -33,6 +33,15 @@ class String
     def blink;          "\e[5m#{self}\e[25m" end
     def reverse_color;  "\e[7m#{self}\e[27m" end
 end
+
+# display size for human
+def human( size)
+    if size < 1000
+        "#{size}b"
+    else
+        "#{size / 1000}k"
+    end
+end
     
 
 # support compiler option like -I but only for local path (see https://gcc.gnu.org/onlinedocs/cpp/Search-Path.html)
@@ -65,7 +74,7 @@ def scan( file, indent="", last=false)
         # looks for  #include directive
         if r =~ /^#include\s*\"([^\"]+)/
             include_file = look_for_include( file, $1, i)
-            include_file_ref = "+- #{i+1}: #{include_file}"
+            include_file_ref = "+- #{i+1}: #{include_file} (#{human( File.size(include_file))})"
 
             if !$pragma_once.has_key?(include_file)
                 STDERR.puts "#{indent}#{include_file_ref}".blue.bold

@@ -7,6 +7,34 @@ STDERR.puts $LOAD_PATH.to_s if DEBUG
 
 $pragma_once={}
 
+# from https://stackoverflow.com/a/16363159/51386
+class String
+    def black;          "\e[30m#{self}\e[0m" end
+    def red;            "\e[31m#{self}\e[0m" end
+    def green;          "\e[32m#{self}\e[0m" end
+    def brown;          "\e[33m#{self}\e[0m" end
+    def blue;           "\e[34m#{self}\e[0m" end
+    def magenta;        "\e[35m#{self}\e[0m" end
+    def cyan;           "\e[36m#{self}\e[0m" end
+    def gray;           "\e[37m#{self}\e[0m" end
+    
+    def bg_black;       "\e[40m#{self}\e[0m" end
+    def bg_red;         "\e[41m#{self}\e[0m" end
+    def bg_green;       "\e[42m#{self}\e[0m" end
+    def bg_brown;       "\e[43m#{self}\e[0m" end
+    def bg_blue;        "\e[44m#{self}\e[0m" end
+    def bg_magenta;     "\e[45m#{self}\e[0m" end
+    def bg_cyan;        "\e[46m#{self}\e[0m" end
+    def bg_gray;        "\e[47m#{self}\e[0m" end
+    
+    def bold;           "\e[1m#{self}\e[22m" end
+    def italic;         "\e[3m#{self}\e[23m" end
+    def underline;      "\e[4m#{self}\e[24m" end
+    def blink;          "\e[5m#{self}\e[25m" end
+    def reverse_color;  "\e[7m#{self}\e[27m" end
+end
+    
+
 # support compiler option like -I but only for local path (see https://gcc.gnu.org/onlinedocs/cpp/Search-Path.html)
 # for that we are abusing ruby $LOAD_PATH
 # file are looked
@@ -37,14 +65,16 @@ def scan( file, indent="", last=false)
         # looks for  #include directive
         if r =~ /^#include\s*\"([^\"]+)/
             include_file = look_for_include( file, $1, i)
+            include_file_ref = "+- #{i+1}: #{include_file}"
+
             if !$pragma_once.has_key?(include_file)
-                STDERR.puts "#{indent}+- (#{i+1}) #{include_file}"
+                STDERR.puts "#{indent}#{include_file_ref}".blue.bold
                 # emit C prep code & recurse on new file
                 puts "#line 1 \"#{include_file}\""
                 scan( include_file, indent + ( last ? "   " : "|  "))
                 puts "\n#line #{i+2} \"#{file}\""
             else
-                STDERR.puts "#{indent}+- (#{i+1}) #{include_file} => already included - skipping"
+                STDERR.puts "#{indent}".blue.bold + "#{include_file_ref} => already included - skipping".gray
             end
         else
             print r
@@ -53,6 +83,6 @@ def scan( file, indent="", last=false)
 end
 
 for arg in ARGV
-    STDERR.puts arg
+    STDERR.puts arg.green.bold
     scan( arg, "", true)
 end

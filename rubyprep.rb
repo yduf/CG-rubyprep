@@ -15,7 +15,8 @@ $pragma_once={}
 # For example, if /usr/include/sys/stat.h contains #include "types.h", 
 # GCC looks for types.h first in /usr/include/sys, 
 # then in its usual search path. 
-def look_for_include( cwd, file)
+def look_for_include( parent, file, line)
+    cwd = File.dirname( parent)
     lookUpDir = [cwd] + $LOAD_PATH
     lookUpDir.each { |d|
         path = File.join( d, file)
@@ -25,7 +26,7 @@ def look_for_include( cwd, file)
         end
     }
 
-    fail "#include not found"
+    fail "#{parent}:#{line+1} #include \"#{file}\" not found"
 end
 
 def scan( file, indent="", last=false)
@@ -35,7 +36,7 @@ def scan( file, indent="", last=false)
         .each_with_index { |r,i| 
         # looks for  #include directive
         if r =~ /^#include\s*\"([^\"]+)/
-            include_file = look_for_include( File.dirname(file), $1)
+            include_file = look_for_include( file, $1, i)
             if !$pragma_once.has_key?(include_file)
                 STDERR.puts "#{indent}+- (#{i+1}) #{include_file}"
                 # emit C prep code & recurse on new file

@@ -85,6 +85,9 @@ def scan( file, indent="", last=false)
             else
                 STDERR.puts "#{indent}".blue.bold + "#{include_file_ref} => already included - skipping".gray
             end
+        elsif r =~ /^#pragma\s+once/
+            print "//"  # comment #pragma once, to avoid warning in results and keep line count
+            print r
         else
             print r
         end 

@@ -18,4 +18,5 @@ The expansions is done:
 - without interpreting condition ```#if``` and ```#ifndef```
 - without expanding macros and ```#define```
 - as if ```#pragma once``` was used within each files.
+- actual  ```#pragma once``` find in local headerare commented out, to avoid generating warning when compiling out file
 

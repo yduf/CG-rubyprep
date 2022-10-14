@@ -79,11 +79,12 @@ def scan( file, indent="", last=false)
             if !$pragma_once.has_key?(include_file)
                 STDERR.puts "#{indent}#{include_file_ref}".blue.bold
                 # emit C prep code & recurse on new file
-                puts "#line 1 \"#{include_file}\""
+                puts "# #{1} \"#{include_file}\""
                 scan( include_file, indent + ( last ? "   " : "|  "))
-                puts "\n#line #{i+2} \"#{file}\""
+                puts "\n# #{i+2} \"#{file}\""
             else
                 STDERR.puts "#{indent}".blue.bold + "#{include_file_ref} => already included - skipping".gray
+                puts ""    # skipped #include still have to fill blank to have correct line count
             end
         elsif r =~ /^#pragma\s+once/
             print "//"  # comment #pragma once, to avoid warning in results and keep line count

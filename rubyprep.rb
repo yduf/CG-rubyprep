@@ -42,7 +42,20 @@ def human( size)
         "#{size / 1000}k"
     end
 end
-    
+
+# intercept puts, returning size of string
+def s_puts( s)
+    puts s
+    s.size + 1      # take \n into account
+end
+
+def s_print( s)
+    print s
+    s.size
+end
+
+class IncludeNotFound < RuntimeError
+end
 
 # support compiler option like -I but only for local path (see https://gcc.gnu.org/onlinedocs/cpp/Search-Path.html)
 # for that we are abusing ruby $LOAD_PATH
@@ -63,11 +76,12 @@ def look_for_include( parent, file, line)
         end
     }
 
-    fail "#{parent}:#{line+1} #include \"#{file}\" not found"
+    fail IncludeNotFound, "#{parent}:#{line+1} #include \"#{file}\" not found"
 end
 
 def scan( file, indent="", last=false)
     $pragma_once[file]=true
+    size = 0
 
     File.foreach( file)
         .each_with_index { |r,i| 
@@ -79,23 +93,38 @@ def scan( file, indent="", last=false)
             if !$pragma_once.has_key?(include_file)
                 STDERR.puts "#{indent}#{include_file_ref}".blue.bold
                 # emit C prep code & recurse on new file
-                puts "# #{1} \"#{include_file}\""
-                scan( include_file, indent + ( last ? "   " : "|  "))
-                puts "\n# #{i+2} \"#{file}\""
+                size += s_puts "# #{1} \"#{include_file}\""
+                size += scan( include_file, indent + ( last ? "   " : "|  "))
+                size += s_puts "\n# #{i+2} \"#{file}\""
             else
                 STDERR.puts "#{indent}".blue.bold + "#{include_file_ref} => already included - skipping".gray
-                puts ""    # skipped #include still have to fill blank to have correct line count
+                size += s_puts ""    # skipped #include still have to fill blank to have correct line count
             end
         elsif r =~ /^#pragma\s+once/
-            print "//"  # comment #pragma once, to avoid warning in results and keep line count
-            print r
+            size += s_print "//"  # comment #pragma once, to avoid warning in results and keep line count
+            size += s_print r
         else
-            print r
+            size += s_print r.to_s
         end 
     }
+
+    size
 end
 
-for arg in ARGV
-    STDERR.puts arg.green.bold
-    scan( arg, "", true)
+begin
+    total_size = 0
+    for arg in ARGV
+        STDERR.puts arg.green.bold
+        file_size = scan( arg, "", true)
+        STDERR.puts "-> #{arg} (#{human(file_size)})".green.bold
+        total_size += file_size
+    end
+
+    if total_size < 100*1000
+        STDERR.puts "Total (#{human(total_size)})".green.bold
+    else
+        STDERR.puts "Total (#{human(total_size)})".red.bold
+    end
+rescue IncludeNotFound => detail
+    STDERR.puts detail.to_s.red.bold
 end

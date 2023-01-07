@@ -76,7 +76,7 @@ def look_for_include( parent, file, line)
         end
     }
 
-    fail IncludeNotFound, "#{parent}:#{line+1} #include \"#{file}\" not found"
+    fail IncludeNotFound, "#{parent}:#{line+1} #include \"#{file}\""
 end
 
 def scan( file, indent="", last=false)
@@ -126,5 +126,6 @@ begin
         STDERR.puts "Total (#{human(total_size)})".red.bold
     end
 rescue IncludeNotFound => detail
-    STDERR.puts detail.to_s.red.bold
+    STDERR.puts "ERROR include not found:".red.bold
+    STDERR.puts detail.to_s.red
 end

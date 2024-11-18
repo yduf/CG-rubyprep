@@ -16,6 +16,7 @@ ex:
 
 The expansions is done:
 - without interpreting condition ```#if``` and ```#ifndef```
+  - This will cause some wrong behavior when reporting file/line if you guard ```#include "something"``` conditionaly inside ```#if```/```#endif```
 - without expanding macros and ```#define```
 - as if ```#pragma once``` was used within each files.
 - actual  ```#pragma once``` find in local header are commented out, to avoid generating warning when compiling final file
